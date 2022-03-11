@@ -1,6 +1,10 @@
 ﻿using System;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace _1._2laba
 {
@@ -11,14 +15,20 @@ namespace _1._2laba
             public double a, b;
         };
 
+        private struct ToSave
+        {
+            public double[] X { get; set; }
+            public double[] Y { get; set; }
+            public double[] ApproxValues { get; set; }
+        };
+
         static void Main()
         {
             const double step = 0.2;
             const double a = 1;
             const double b = 2;
 
-            int size = 0;
-            double[,] matrix = generate(out size, a, b, step);
+            double[,] matrix = generate(out int size, a, b, step);
 
             Console.WriteLine("Исходная табличная функция");
             print(matrix);
@@ -29,42 +39,55 @@ namespace _1._2laba
 
             double[] approxValues = new double[size];
 
-            for (int i = 0; i < size; i++)
+            for (int i = 0; i < size; ++i)
             {
                 approxValues[i] = fApprox(coefficients, matrix[0, i]);
             }
 
             Console.WriteLine($"\nМера отклонения: {getPrecision(matrix, approxValues, size)}");
 
-            var accurateStringValuesY = "";
-            var approxStringValuesY = "";
-            var stringValuesX = "";
-
-            for (var i = 0; i < size; i++)
-            {
-                stringValuesX += matrix[0, i] + " ";
-                accurateStringValuesY += matrix[1, i] + " ";
-                approxStringValuesY += approxValues[i] + " ";
-            }
-
-            //using var fstream = new FileStream("data.txt", FileMode.OpenOrCreate);
-            //fstream.Write(Encoding.Default.GetBytes(stringValuesX + "\n"));
-            //fstream.Write(Encoding.Default.GetBytes(accurateStringValuesY + "\n"));
-            //fstream.Write(Encoding.Default.GetBytes(approxStringValuesY + "\n"));
+            drawingGraph(matrix, approxValues, size);
 
             Console.Read();
+        }
+
+        static void drawingGraph(double[,] matrix, double[] approxValues, int size)
+        {
+            try
+            {
+                ToSave data = new ToSave();
+                double[] x = new double[size];
+                double[] y = new double[size];
+                for (int i = 0; i < size; ++i)
+                {
+                    x[i] = matrix[0, i];
+                    y[i] = matrix[1, i];
+                }
+                data.X = x;
+                data.Y = y;
+                data.ApproxValues = approxValues;
+
+                string json = JsonSerializer.Serialize(data);
+                File.WriteAllText(@"D:\лабы\6 семестр\ЧМ\1.2laba\Save\temp.json", json);
+
+                Process p = Process.Start(@"D:\лабы\6 семестр\ЧМ\1.2laba\visualizationGraphs\visualizationGraphs.py");
+                p.WaitForExit();
+            }
+            catch (Win32Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
 
         static double getPrecision(double[,] accurateValues, double[] approxValues, int size)
         {
             double precision = 0;
-            for (var i = 0; i < size; i++)
+            for (var i = 0; i < size; ++i)
             {
-                Console.WriteLine(Math.Round(accurateValues[1, i], 3) + " : " + Math.Round(approxValues[i], 3));
-                precision += (approxValues[i] - accurateValues[1, i]) * (approxValues[i] - accurateValues[1, i]);
+                precision += (accurateValues[1, i] - approxValues[i]) * (accurateValues[1, i] - approxValues[i]);
             }
 
-            return precision;
+            return Math.Sqrt(precision / (size + 1));
         }
 
         static Coefficients calculateCoefficients(double[,] data, int size)
@@ -101,34 +124,6 @@ namespace _1._2laba
             return result;
         }
 
-        //static Coefficients calculateCoefficients(double[,] data, int size)
-        //{
-        //    Coefficients result;
-
-        //    double ySumm = data[1, 0];
-        //    for(int i = 1; i < size; ++i)
-        //    {
-        //        ySumm += data[1, i];
-        //    }
-
-        //    double xSumm = Math.Log(data[0, 0]);
-        //    for(int i = 1; i < size; ++i)
-        //    {
-        //        xSumm += Math.Log(data[0, i]);
-        //    }
-
-        //    double xSummY = 0;
-        //    for (int i = 0; i < size; ++i)
-        //    {
-        //        xSummY += Math.Log(data[0, i]) * data[1, i];
-        //    }
-
-        //    result.a = (ySumm - xSummY / xSumm) / size;
-        //    result.b = xSummY / (xSumm * xSumm);
-
-        //    return result;
-        //}
-
         private static double fApprox(Coefficients coefficients, double x)
         {
             return coefficients.a + coefficients.b * Math.Log(x);
@@ -145,22 +140,6 @@ namespace _1._2laba
                     Console.Write(Math.Round(matrix[i, j], 3) + " ");
                 }
                 Console.WriteLine();
-            }
-        }
-
-        private static void divideRow(ref double[,] matrix, double amount, int row, int size)
-        {
-            for (var i = 0; i < size; i++)
-            {
-                matrix[row, i] /= amount;
-            }
-        }
-
-        private static void substractRow(ref double[,] matrix, int rowToSubstract, int rowFromSubstract, double mult, int size)
-        {
-            for (var i = 0; i < size; i++)
-            {
-                matrix[rowFromSubstract, i] -= matrix[rowToSubstract, i] * mult;
             }
         }
 
