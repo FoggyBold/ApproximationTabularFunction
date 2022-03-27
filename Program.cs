@@ -45,7 +45,7 @@ namespace _1._2laba
             }
 
             Console.WriteLine($"\nМера отклонения: {getPrecision(matrix, approxValues, size)}");
-
+            Console.WriteLine($"\nУвеличение разбиения на основе предыдущих вычислений, новая мера отклонения: {increasingSplitAndCountError(matrix, approxValues, size, coefficients)}");
             drawingGraph(matrix, approxValues, size);
 
             Console.Read();
@@ -77,6 +77,27 @@ namespace _1._2laba
             {
                 Console.WriteLine(ex.Message);
             }
+        }
+
+        static double increasingSplitAndCountError(double[,] accurateValues, double[] approxValues, int size, Coefficients coefficients)
+        {
+            double[] newApproxValues = new double[size * 2 - 1];
+            double[,] newAccurateValues = new double[2, size * 2 - 1];
+            for(int i = 0, j = 0; i < size * 2 - 1; i += 2, ++j)
+            {
+                newAccurateValues[0, i] = accurateValues[0, j];
+                newAccurateValues[1, i] = accurateValues[1, j];
+                newApproxValues[i] = approxValues[j];
+            }
+
+            for(int i = 1; i < size * 2 - 1; i += 2)
+            {
+                newAccurateValues[0, i] = newAccurateValues[0, i - 1] + (newAccurateValues[0, i + 1] - newAccurateValues[0, i - 1]) / 2;
+                newAccurateValues[1, i] = f(newAccurateValues[0, i]);
+                newApproxValues[i] = fApprox(coefficients, newAccurateValues[0, i]);
+            }
+
+            return getPrecision(newAccurateValues, newApproxValues, size * 2 - 1);
         }
 
         static double getPrecision(double[,] accurateValues, double[] approxValues, int size)
