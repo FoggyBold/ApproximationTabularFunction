@@ -24,29 +24,29 @@ namespace _1._2laba
 
         static void Main()
         {
-            const double step = 0.2;
+            const int n = 1000;
             const double a = 1;
             const double b = 2;
 
-            double[,] matrix = generate(out int size, a, b, step);
+            double[,] matrix = generate(a, b, n);
 
             Console.WriteLine("Исходная табличная функция");
             print(matrix);
 
-            Coefficients coefficients = calculateCoefficients(matrix, size);
+            Coefficients coefficients = calculateCoefficients(matrix, n);
 
             Console.WriteLine($"Полученные коэффиценты\na = {coefficients.a}\nb = {coefficients.b}");
 
-            double[] approxValues = new double[size];
+            double[] approxValues = new double[n];
 
-            for (int i = 0; i < size; ++i)
+            for (int i = 0; i < n; ++i)
             {
                 approxValues[i] = fApprox(coefficients, matrix[0, i]);
             }
 
-            Console.WriteLine($"\nМера отклонения: {getPrecision(matrix, approxValues, size)}");
-            Console.WriteLine($"\nУвеличение разбиения на основе предыдущих вычислений, новая мера отклонения: {increasingSplitAndCountError(matrix, approxValues, size, coefficients)}");
-            drawingGraph(matrix, approxValues, size);
+            Console.WriteLine($"\nМера отклонения: {getPrecision(matrix, approxValues, n)}");
+            //Console.WriteLine($"\nУвеличение разбиения на основе предыдущих вычислений, новая мера отклонения: {increasingSplitAndCountError(matrix, approxValues, n, coefficients)}");
+            drawingGraph(matrix, approxValues, n);
 
             Console.Read();
         }
@@ -164,15 +164,15 @@ namespace _1._2laba
             }
         }
 
-        private static double[,] generate(out int size, double a, double b, double step/*, bool nodelta = false*/)
+        private static double[,] generate(double a, double b, int n)
         {
-            size = (int)Math.Round((b - a) / step) + 1;
+            double[,] result = new double[2, n];
 
-            double[,] result = new double[2, size];
+            double step = (b - a) / n;
 
-            fillingMatrix(result, a, b, step, size);
-            double fmax = findMax(result, size);
-            addingRandomNumbers(result, size, fmax);
+            fillingMatrix(result, a, b, step, n);
+            double fmax = findMax(result, n);
+            addingRandomNumbers(result, n, fmax);
 
             return result;
         }
@@ -208,9 +208,14 @@ namespace _1._2laba
             }
         }
 
+        //private static double f(double x)
+        //{
+        //    return 0.6 + 0.5 * Math.Log(x);
+        //}
+
         private static double f(double x)
         {
-            return 0.6 + 0.5 * Math.Log(x);
+            return 12 + 1.23 / x;
         }
     }
 }
